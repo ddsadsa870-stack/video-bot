@@ -6,33 +6,34 @@ from aiogram.filters import CommandStart
 from aiogram.types import FSInputFile
 import yt_dlp
 
-# Bot tokeningiz
-BOT_TOKEN = "9188676247:AAHFUnZiObPT2A_TJwKyp0VwIYgH4Tv8tfU" # Tokeningiz shu holatda qoladi
+# Bot tokeni muhit o'zgaruvchisidan olinadi
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token=BOT_TOKEN)
+bot = Bot(token=9188676247:AAHFUnZiObPT2A_TJwKyp0VwIYgH4Tv8tfU)
 dp = Dispatcher()
 
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-
 def download_video(url: str, user_id: int) -> str:
-    """Havola orqali videoni tezroq yuklab oluvchi funksiya"""
     output_template = os.path.join(DOWNLOAD_DIR, f"{user_id}_%(id)s.%(ext)s")
     ydl_opts = {
-        # Eng yuqori sifat o'rniga o'rtacha tezroq ishlaydigan formatni tanlaymiz
-        "format": "mp4/best",
+        "format": "best[ext=mp4]/best",
         "outtmpl": output_template,
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
-        "max_filesize": 50 * 1024 * 1024,  # Telegram bot limiti: 50 MB
+        "geo_bypass": True,
+        "nocheckcertificate": True,
+        "extractor_args": {
+            "youtube": {"player_client": ["android", "web"]}
+        },
+        "max_filesize": 50 * 1024 * 1024,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         return ydl.prepare_filename(info)
-
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
@@ -40,7 +41,6 @@ async def cmd_start(message: types.Message):
         "Salom! Menga Instagram, TikTok yoki YouTube video havolasini yuboring.\n"
         "Tez fursatda yuklab beraman!"
     )
-
 
 @dp.message(F.text.startswith(("http://", "https://")))
 async def handle_video_link(message: types.Message):
@@ -50,10 +50,9 @@ async def handle_video_link(message: types.Message):
     file_path = None
     try:
         loop = asyncio.get_running_loop()
-        # Yuklash jarayoni osilib qolmasligi uchun executor ishlatamiz
         file_path = await asyncio.wait_for(
             loop.run_in_executor(None, download_video, url, message.from_user.id),
-            timeout=60.0  # Agar 60 soniyadan oshib ketsa to'xtatadi
+            timeout=60.0
         )
 
         if file_path and os.path.exists(file_path):
@@ -78,10 +77,8 @@ async def handle_video_link(message: types.Message):
         if file_path and os.path.exists(file_path):
             os.remove(file_path)
 
-
 async def main():
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
