@@ -1,0 +1,4 @@
+aiogram==3.32.0
+yt-dlp
+aiofiles
+aiohttp
