@@ -6,11 +6,10 @@ from aiogram.filters import CommandStart
 from aiogram.types import FSInputFile
 import yt_dlp
 
-# Bot tokeni muhit o'zgaruvchisidan olinadi
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+BOT_TOKEN = os.environ.get("9188676247:AAHFUnZiObPT2A_TJwKyp0VwIYgH4Tv8tfU")
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot(token=9188676247:AAHFUnZiObPT2A_TJwKyp0VwIYgH4Tv8tfU)
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 DOWNLOAD_DIR = "downloads"
@@ -19,16 +18,14 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 def download_video(url: str, user_id: int) -> str:
     output_template = os.path.join(DOWNLOAD_DIR, f"{user_id}_%(id)s.%(ext)s")
     ydl_opts = {
-        "format": "best[ext=mp4]/best",
+        # FFmpeg talab qilmaydigan, audio va video bitta faylda bo'lgan formatni tanlaymiz
+        "format": "b[ext=mp4]/b",
         "outtmpl": output_template,
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
         "geo_bypass": True,
         "nocheckcertificate": True,
-        "extractor_args": {
-            "youtube": {"player_client": ["android", "web"]}
-        },
         "max_filesize": 50 * 1024 * 1024,
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
